@@ -34,8 +34,7 @@
 (require net/url)
 (require ffi/unsafe)
 
-(define URL "http://www.geforce.com/proxy?proxy_url=http%3A%2F%2Fgfwsl.geforce.com%2Fservices_toolkit%2Fservices%2Fcom%2Fnvidia%2Fservices%2FAjaxDriverService.php%3Ffunc%3DDriverManualLookup%26psid%3D85%26pfid%3D653%26osID%3D57%26languageCode%3D1033%26beta%3D0%26isWHQL%3D1%26dltype%3D-1%26sort1%3D0%26numberOfResults%3D1")
-
+(define URL "https://gfwsl.geforce.com/services_toolkit/services/com/nvidia/services/AjaxDriverService.php?func=DriverManualLookup&psid=85&pfid=653&osID=57&languageCode=1033&beta=0&isWHQL=1&dltype=-1&sort1=0&numberOfResults=10")
 (define PROGRAMFILES (getenv "ProgramFiles"))
 (define NVIDIASMIPATH "NVIDIA Corporation\\NVSMI\\nvidia-smi.exe")
 (define NVIDIASMI (string-append PROGRAMFILES "\\" NVIDIASMIPATH))
