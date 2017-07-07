@@ -2,7 +2,7 @@
 GeForceDrvChk is a small no-nonsense application for automatically checking Geforce driver updates under Windows.
 
 ## Introduction
-This little piece of code checks the GeForce website for new driver versions. It only checks for the GeForce GTX series driver for English language and 64-bit Windows desktop (so, no laptop version of the driver).
+This little piece of code checks the GeForce website for new driver versions. It only checks for the International GeForce GTX series driver for 64-bit Windows desktop (so, no laptop version of the driver).
 
 The main point of the application is to demonstrate the following Racket language features:
 
