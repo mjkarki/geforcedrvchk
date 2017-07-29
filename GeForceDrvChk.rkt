@@ -74,4 +74,5 @@
                                                (number->string version))
                                 "There is a new GeForce driver available"
                                 (bitwise-ior MB_YESNO MB_ICONEXCLAMATION)))
-      (process (string-append "start " dlurl)))))
+      (let ((ignored-response (process (string-append "start " dlurl))))
+        (void)))))
