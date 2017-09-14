@@ -29,10 +29,13 @@
 ; OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-#lang racket
-(require racket/system)
-(require net/url)
-(require ffi/unsafe)
+#lang racket/base
+
+(require racket/port
+         racket/list
+         racket/system
+         net/url
+         ffi/unsafe)
 
 (define URL "https://gfwsl.geforce.com/services_toolkit/services/com/nvidia/services/AjaxDriverService.php?func=DriverManualLookup&psid=85&pfid=653&osID=57&languageCode=1033&beta=0&isWHQL=1&dltype=-1&sort1=0&numberOfResults=10")
 (define PROGRAMFILES (getenv "ProgramFiles"))
