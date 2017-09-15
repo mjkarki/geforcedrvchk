@@ -49,15 +49,41 @@
                                        _uint32
                                        -> _int32) #f))
 (define NULL #f)
-(define MB_OK #x00000000)
-(define MB_YESNO #x00000004)
+
+(define MB_OK              #x00000000)
+(define MB_YESNO           #x00000004)
 (define MB_ICONEXCLAMATION #x00000030)
-(define IDYES 6)
-(define IDNO 7)
+(define MB_ICONINFORMATION #x00000040)
+(define MB_ICONQUESTION    #x00000020)
+(define MB_ICONSTOP        #x00000010)
+
+(define IDOK       01)
+(define IDCANCEL   02)
+(define IDABORT    03)
+(define IDRETRY    04)
+(define IDIGNORE   05)
+(define IDYES      06)
+(define IDNO       07)
+(define IDTRYAGAIN 10)
+(define IDCONTINUE 11)
 
 (define (get-installed-version)
-  (string->number (second (regexp-match #rx"Driver Version: ([0-9]+.[0-9]+)"
-                                        (port->string (first (process NVIDIASMI)))))))
+  (let ((matchresults (regexp-match #rx"Driver Version: ([0-9]+.[0-9]+)"
+                                    (port->string (first (process NVIDIASMI))))))
+    (if matchresults
+        (string->number (second matchresults))
+        (let ()
+          (MessageBoxW NULL
+                       (string-append "Unable to get the driver version!"
+                                      "\n\n"
+                                      "Can't get information by using the program:"
+                                      "\n"
+                                      NVIDIASMI
+                                      "\n\n"
+                                      "Maybe the GeForce drivers are not installed?")
+                       "Error!"
+                       (bitwise-ior MB_OK MB_ICONSTOP))
+          #f))))
 
 (define (get-driver-info)
   (let ((page (port->string (get-pure-port (string->url URL)))))
@@ -68,14 +94,15 @@
        (version (first info))
        (dlurl (second info))
        (installed-version (get-installed-version)))
-  (when (> version installed-version)
-    (when (= IDYES (MessageBoxW NULL
-                                (string-append "Current version: "
-                                               (number->string installed-version)
-                                               "\n"
-                                               "New version: "
-                                               (number->string version))
-                                "There is a new GeForce driver available"
-                                (bitwise-ior MB_YESNO MB_ICONEXCLAMATION)))
-      (let ((ignored-response (process (string-append "start " dlurl))))
-        (void)))))
+  (when installed-version
+    (when (> version installed-version)
+      (when (= IDYES (MessageBoxW NULL
+                                  (string-append "Current version: "
+                                                 (number->string installed-version)
+                                                 "\n"
+                                                 "New version: "
+                                                 (number->string version))
+                                  "There is a new GeForce driver available"
+                                  (bitwise-ior MB_YESNO MB_ICONEXCLAMATION)))
+        (let ((ignored-response (process (string-append "start " dlurl))))
+          (void))))))
