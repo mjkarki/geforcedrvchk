@@ -37,7 +37,7 @@
          net/url
          ffi/unsafe)
 
-(define URL "https://gfwsl.geforce.com/services_toolkit/services/com/nvidia/services/AjaxDriverService.php?func=DriverManualLookup&psid=85&pfid=653&osID=57&languageCode=1033&beta=0&isWHQL=1&dltype=-1&sort1=0&numberOfResults=10")
+(define URL "https://gfwsl.geforce.com/services_toolkit/services/com/nvidia/services/AjaxDriverService.php?func=DriverManualLookup&psid=101&pfid=859&osID=57&languageCode=1033&beta=0&isWHQL=1&dltype=-1&sort1=0&numberOfResults=10")
 (define PROGRAMFILES (getenv "ProgramFiles"))
 (define NVIDIASMIPATH "NVIDIA Corporation\\NVSMI\\nvidia-smi.exe")
 (define NVIDIASMI (string-append PROGRAMFILES "\\" NVIDIASMIPATH))
@@ -87,22 +87,25 @@
 
 (define (get-driver-info)
   (let ((page (port->string (get-pure-port (string->url URL)))))
-    (list (string->number (second (regexp-match #rx"\"Version\" : \"(.+?)\"" page)))
-          (second (regexp-match #rx"\"DownloadURL\" : \"(.+?)\"" page)))))
+    (if (string? page)
+        (list (string->number (second (regexp-match #rx"\"Version\" : \"(.+?)\"" page)))
+              (second (regexp-match #rx"\"DownloadURL\" : \"(.+?)\"" page)))
+        (list #f #f))))
 
 (let* ((info (get-driver-info))
        (version (first info))
        (dlurl (second info))
        (installed-version (get-installed-version)))
-  (when installed-version
-    (when (> version installed-version)
-      (when (= IDYES (MessageBoxW NULL
-                                  (string-append "Current version: "
-                                                 (number->string installed-version)
-                                                 "\n"
-                                                 "New version: "
-                                                 (number->string version))
-                                  "There is a new GeForce driver available"
-                                  (bitwise-ior MB_YESNO MB_ICONEXCLAMATION)))
-        (let ((ignored-response (process (string-append "start " dlurl))))
-          (void))))))
+  (when version
+    (when installed-version
+      (when (> version installed-version)
+        (when (= IDYES (MessageBoxW NULL
+                                    (string-append "Current version: "
+                                                   (number->string installed-version)
+                                                   "\n"
+                                                   "New version: "
+                                                   (number->string version))
+                                    "There is a new GeForce driver available"
+                                    (bitwise-ior MB_YESNO MB_ICONEXCLAMATION)))
+          (let ((ignored-response (process (string-append "start " dlurl))))
+            (void)))))))
