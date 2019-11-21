@@ -1,6 +1,6 @@
 ; BSD 3-Clause License
 ;
-; Copyright (c) 2017, Matti J. Kärki
+; Copyright (c) 2017-2019, Matti J. Kärki
 ; All rights reserved.
 ;
 ; Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,17 @@
 (define NVIDIASMIPATH "NVIDIA Corporation\\NVSMI\\nvidia-smi.exe")
 (define NVIDIASMI (string-append PROGRAMFILES "\\" NVIDIASMIPATH))
 
+(define ERRORTITLE "Error!")
+(define ERRORMSG (string-append "Unable to get the driver version!\n\n"
+                                "Can't get information by using the program:\n"
+                                "~a\n\n"
+                                "Maybe the GeForce drivers are not installed?"))
+
+(define VERSIONTITLE "There is a new GeForce driver available")
+(define VERSIONMSG (string-append "Current version: ~a\n"
+                                  "New version: ~a"))
+
+
 (define MessageBoxW (get-ffi-obj "MessageBoxW" (ffi-lib "user32.dll")
                                  (_fun _pointer
                                        _string/utf-16
@@ -67,45 +78,44 @@
 (define IDTRYAGAIN 10)
 (define IDCONTINUE 11)
 
+(define (get-page url)
+  (port->string (get-pure-port (string->url URL))))
+
+(define (get-version page)
+  (string->number (second (regexp-match #rx"\"Version\" : \"(.+?)\"" page))))
+
+(define (get-dl-url page)
+  (second (regexp-match #rx"\"DownloadURL\" : \"(.+?)\"" page)))
+
+(define (ask-dl-yes-no installed-version version)
+  (MessageBoxW NULL (format VERSIONMSG installed-version version) VERSIONTITLE
+               (bitwise-ior MB_YESNO MB_ICONEXCLAMATION)))
+
 (define (get-installed-version)
   (let ((matchresults (regexp-match #rx"Driver Version: ([0-9]+.[0-9]+)"
                                     (port->string (first (process NVIDIASMI))))))
     (if matchresults
         (string->number (second matchresults))
-        (let ()
-          (MessageBoxW NULL
-                       (string-append "Unable to get the driver version!"
-                                      "\n\n"
-                                      "Can't get information by using the program:"
-                                      "\n"
-                                      NVIDIASMI
-                                      "\n\n"
-                                      "Maybe the GeForce drivers are not installed?")
-                       "Error!"
-                       (bitwise-ior MB_OK MB_ICONSTOP))
+        (begin
+          (MessageBoxW NULL (format ERRORMSG NVIDIASMI) ERRORTITLE (bitwise-ior MB_OK MB_ICONSTOP))
           #f))))
 
 (define (get-driver-info)
-  (let ((page (port->string (get-pure-port (string->url URL)))))
+  (let ((page (get-page URL)))
     (if (string? page)
-        (list (string->number (second (regexp-match #rx"\"Version\" : \"(.+?)\"" page)))
-              (second (regexp-match #rx"\"DownloadURL\" : \"(.+?)\"" page)))
+        (list (get-version page) (get-dl-url page))
         (list #f #f))))
 
-(let* ((info (get-driver-info))
-       (version (first info))
-       (dlurl (second info))
-       (installed-version (get-installed-version)))
-  (when version
-    (when installed-version
-      (when (> version installed-version)
-        (when (= IDYES (MessageBoxW NULL
-                                    (string-append "Current version: "
-                                                   (number->string installed-version)
-                                                   "\n"
-                                                   "New version: "
-                                                   (number->string version))
-                                    "There is a new GeForce driver available"
-                                    (bitwise-ior MB_YESNO MB_ICONEXCLAMATION)))
-          (let ((ignored-response (process (string-append "start " dlurl))))
-            (void)))))))
+(define (main)
+  (let* ((info (get-driver-info))
+         (version (first info))
+         (dlurl (second info))
+         (installed-version (get-installed-version)))
+    (when version
+      (when installed-version
+        (when (> version installed-version)
+          (when (= IDYES (ask-dl-yes-no installed-version version))
+            (let ((ignored-response (process (string-append "start " dlurl))))
+              (void))))))))
+
+(main)
